@@ -1,18 +1,18 @@
+import { useState, useCallback } from "react";
 import TodoList from "@/assets/todo.json";
 import { FRUIT, VEGETABLE } from "@/constants/todo";
 import { ITodo } from "@/types/todo.types";
-import { useState } from "react";
 
 export default function Home() {
   const [todoList, setTodoList] = useState<ITodo[]>(TodoList);
   const [fruitList, setFruitList] = useState<ITodo[]>([]);
   const [vegetableList, setVegetableList] = useState<ITodo[]>([]);
-  const [removeQueueList, setRemoveQueueList] = useState<ITodo[]>([]);
+  const [, setRemoveQueueList] = useState<ITodo[]>([]);
 
   const filterTodoByName = (todoList: ITodo[], todo: ITodo) =>
     todoList.filter((_todo) => _todo.name !== todo.name);
 
-  function autoRemoveTodo(todo: ITodo) {
+  const autoRemoveTodo = useCallback((todo: ITodo) => {
     setRemoveQueueList((prev) => [...prev, todo]);
     setTimeout(() => {
       setRemoveQueueList((prev) => {
@@ -21,24 +21,26 @@ export default function Home() {
         ) {
           removeTodo(todo);
         }
-
         return prev;
       });
     }, 5000);
-  }
+  }, []);
 
-  function moveTodo(todo: ITodo) {
-    if (todo.type === FRUIT) {
-      setFruitList([...fruitList, todo]);
-    } else if (todo.type === VEGETABLE) {
-      setVegetableList([...vegetableList, todo]);
-    }
+  const moveTodo = useCallback(
+    (todo: ITodo) => {
+      if (todo.type === FRUIT) {
+        setFruitList((prev) => [...prev, todo]);
+      } else if (todo.type === VEGETABLE) {
+        setVegetableList((prev) => [...prev, todo]);
+      }
 
-    setTodoList(filterTodoByName(todoList, todo));
-    autoRemoveTodo(todo);
-  }
+      setTodoList((prev) => filterTodoByName(prev, todo));
+      autoRemoveTodo(todo);
+    },
+    [autoRemoveTodo]
+  );
 
-  function removeTodo(todo: ITodo) {
+  const removeTodo = useCallback((todo: ITodo) => {
     if (todo.type === FRUIT) {
       setFruitList((prev) => filterTodoByName(prev, todo));
     } else if (todo.type === VEGETABLE) {
@@ -49,7 +51,7 @@ export default function Home() {
     setRemoveQueueList((prev) => {
       return filterTodoByName(prev, todo);
     });
-  }
+  }, []);
 
   return (
     <main className="grid grid-cols-8 gap-2 pt-12 h-screen">
